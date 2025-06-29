@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 
-const uri = "mongodb://localhost:27017/rci-backend"; 
+const uri = "mongodb+srv://lytnetwork:lytnetwork%40123@lytnetwork.11yzrzs.mongodb.net/?retryWrites=true&w=majority&appName=Lytnetwork"; 
 const connectDatabase = async() => {
 try {
     const db = await mongoose.connect(uri);
