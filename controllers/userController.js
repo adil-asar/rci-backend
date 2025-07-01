@@ -28,12 +28,12 @@ export const Signup = async (req, res) => {
         .json({ message: "A user with this email already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    ;
 
     const user = await User.create({
       username,
       email,
-      password: hashedPassword,
+      password,
       role,
     });
 
@@ -41,6 +41,7 @@ export const Signup = async (req, res) => {
       _id: user._id,
       username: user.username,
       email: user.email,
+      password: user.password, 
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -60,7 +61,7 @@ export const Signup = async (req, res) => {
 };
 
 export const Signin = async (req, res) => {
-try {
+  try {
     const validationResult = signInSchema.safeParse(req.body);
     if (!validationResult.success) {
       const formattedErrors = validationResult.error.errors.reduce(
@@ -72,16 +73,21 @@ try {
       );
       return res.status(400).json({ errors: formattedErrors });
     }
+
     const { email, password } = req.body;
+
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: "Invalid email " });
+      return res.status(401).json({ error: "Invalid email" });
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+
+   
+    if (user.password !== password) {
       return res.status(401).json({ error: "Invalid password" });
     }
+
     const token = generateToken(user);
+
     res.status(200).json({
       user_Token: token,
     });
@@ -91,7 +97,6 @@ try {
       .status(500)
       .json({ error: "Something went wrong. Please try again later." });
   }
-  
 };
 
 export const ValidateUser = async (req, res) => {
@@ -118,30 +123,13 @@ export const ValidateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const [result] = await User.aggregate([
-      { $match: { role: "user" } },
-      {
-        $facet: {
-          totalCount: [{ $count: "count" }],
-          data: [
-            { $sort: { createdAt: -1 } },
-            { $skip: skip },
-            { $limit: limit },
-            { $project: { password: 0 } } 
-          ]
-        }
-      }
-    ]);
-
-    const total = result?.totalCount[0]?.count || 0;
+    const users = await User.find({ role: "user" })
+      .sort({ createdAt: -1 }) // optional: sort latest first
+      .select("username email password"); // only select needed fields
 
     res.status(200).json({
-      total,
-      data: result.data
+      total: users.length,
+      data: users,
     });
 
   } catch (error) {
@@ -149,3 +137,4 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+

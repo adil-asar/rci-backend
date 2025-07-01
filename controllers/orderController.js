@@ -54,3 +54,61 @@ export const createOrder = async (req, res) => {
     });
   }
 };
+
+
+
+
+export const GetAllOrders = async (req, res) => {
+  try {
+    const pipeline = [
+      { $sort: { createdAt: -1 } },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "addedBy",
+          foreignField: "_id",
+          as: "userInfo",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$userInfo",
+          // preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          phone: 1,
+          service: 1,
+          city: 1,
+          state: 1,
+          address: 1,
+          message: 1,
+          documents: 1,
+          createdAt: 1,
+          userInfo: {
+            _id: 1,
+            username: 1,
+            email: 1,
+          },
+        },
+      },
+    ];
+
+    const orders = await Order.aggregate(pipeline);
+
+    res.status(200).json({
+      success: true,
+      totalOrders: orders.length,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+};
