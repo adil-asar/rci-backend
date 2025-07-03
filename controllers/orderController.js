@@ -13,7 +13,7 @@ export const createOrder = async (req, res) => {
     }
 
     const uploadedDocs = req.files.map((file) => {
-      console.log("Processed file:", file.originalname, "->", file.path); 
+      console.log("Processed file:", file.originalname, "->", file.path);
       return file.path;
     });
 
@@ -21,25 +21,24 @@ export const createOrder = async (req, res) => {
       addedBy: userId,
       name: req.body.name,
       email: req.body.email,
-      service: req.body.service,
       phone: req.body.phone,
+      address: req.body.address,
       city: req.body.city,
       state: req.body.state,
-      address: req.body.address,
+      deliveryAddress: req.body.deliveryAddress,
+      deliveryCity: req.body.deliveryCity,
+      deliveryState: req.body.deliveryState,
+      service: req.body.service,
       message: req.body.message || "",
       documents: uploadedDocs,
     };
 
-
-
     const newOrder = new Order(orderData);
     const savedOrder = await newOrder.save();
 
-    
-
     res.status(201).json({
       message: "Order created successfully",
-      order: savedOrder
+      order: savedOrder,
     });
 
   } catch (error) {
@@ -50,10 +49,11 @@ export const createOrder = async (req, res) => {
 
     res.status(500).json({
       error: "Internal Server Error",
-      details: error.message
+      details: error.message,
     });
   }
 };
+
 
 
 
@@ -110,5 +110,30 @@ export const GetAllOrders = async (req, res) => {
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ error: "Failed to fetch orders" });
+  }
+};
+
+
+export const deleteOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    const deletedOrder = await Order.findByIdAndDelete(orderId);
+
+    if (!deletedOrder) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully",
+      deletedOrder,
+    });
+  } catch (error) {
+    console.error("❌ Error deleting order:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      details: error.message,
+    });
   }
 };

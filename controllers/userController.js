@@ -123,9 +123,26 @@ export const ValidateUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .sort({ createdAt: -1 }) 
-      .select("username email password role"); 
+    const users = await User.find({ role: "user" }) // Filter by role
+      .sort({ createdAt: -1 })
+      .select("username email password role");
+
+    res.status(200).json({
+      total: users.length,
+      data: users,
+    });
+
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getAllAdmins = async (req, res) => {
+  try {
+    const users = await User.find({ role: "admin" }) 
+      .sort({ createdAt: -1 })
+      .select("username email password role");
 
     res.status(200).json({
       total: users.length,

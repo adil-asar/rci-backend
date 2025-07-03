@@ -1,57 +1,69 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', 
-      required: true
+      ref: "User",
+      required: true,
     },
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     email: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     service: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     phone: {
       type: String,
-      required: true
+      required: true,
     },
     city: {
       type: String,
-      required: true
+      required: true,
     },
     state: {
       type: String,
-      required: true
+      required: true,
     },
     address: {
       type: String,
-      required: true
+      required: true,
+    },
+    deliveryAddress: {
+      type: String,
+      required: true,
+    },
+    deliveryCity: {
+      type: String,
+      required: true,
+    },
+    deliveryState: {
+      type: String,
+      required: true,
     },
     message: {
       type: String,
-      required: false
+      required: false,
     },
     documents: {
-      type: [String], 
-      default: []
-    }
+      type: [String],
+      default: [],
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-const Order = mongoose.model('OrderForm', orderSchema);
+const Order = mongoose.model("OrderForm", orderSchema);
 
 export default Order;
