@@ -14,3 +14,13 @@ try {
 };
 
 export default connectDatabase
+
+
+
+
+// 1039328786603-e14ec2dg5gk29ulh4spd1c9pu65s002t.apps.googleusercontent.com client ID
+
+
+
+
+// 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  secret key

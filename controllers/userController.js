@@ -173,5 +173,48 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+export const googleSignin = async (req, res) => {
+  const { token } = req.body;
 
+  if (!token) {
+    return res.status(400).json({ error: "No token provided" });
+  }
 
+  try {
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+    if (!response.ok) {
+      return res.status(400).json({ error: "Invalid Google token" });
+    }
+
+    const data = await response.json();
+    const { email, name, sub: googleId } = data;
+
+    if (!email || !name || !googleId) {
+      return res.status(400).json({ error: "Incomplete Google data" });
+    }
+
+    // Check for existing user
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        username: name,
+        email,
+        password: googleId, 
+        role: "user",
+      });
+    }
+
+    const userToken = generateToken(user);
+
+    res.status(200).json({
+      message: "Google login successful",
+      user,
+      token: userToken,
+    });
+
+  } catch (error) {
+    console.error("Google Sign-In error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
