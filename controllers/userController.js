@@ -2,9 +2,10 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import { signUpSchema, signInSchema } from "../validations/user.js";
 import { generateToken, verifyToken } from "../config/token.js";
-export const Signup = async (req, res) => {
+import { sendVerificationEmail } from "../config/mailer.js";
 
-     try {
+export const Signup = async (req, res) => {
+  try {
     const result = signUpSchema.safeParse(req.body);
     if (!result.success) {
       const errors = result.error.errors.reduce((acc, err) => {
@@ -19,7 +20,7 @@ export const Signup = async (req, res) => {
       return res.status(400).json({ errors });
     }
 
-    const { username,  email, password, role } = result.data;
+    const { username, email, password, role } = result.data;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -28,28 +29,32 @@ export const Signup = async (req, res) => {
         .json({ message: "A user with this email already exists" });
     }
 
-    ;
-
     const user = await User.create({
       username,
       email,
       password,
       role,
+      active: false,
     });
 
-    const userResponse = {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      password: user.password, 
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    const token = generateToken({ userId: user._id }, "15m");
+
+    const verificationUrl = `http://localhost:5173/verify-email?token=${token}`;
+
+    await sendVerificationEmail({ email, username, verificationUrl });
 
     res.status(200).json({
-      message: "User registered successfully",
-      user: userResponse,
+      message:
+        "User registered successfully. Please confirm your email to activate your account.",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        active: user.active,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     console.error("Error during signup:", error);
@@ -57,7 +62,6 @@ export const Signup = async (req, res) => {
       message: "Internal server error",
     });
   }
-
 };
 
 export const Signin = async (req, res) => {
@@ -78,17 +82,27 @@ export const Signin = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: "Invalid email" });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
-   
-    if (user.password !== password) {
-      return res.status(401).json({ error: "Invalid password" });
+    // Check if user is active (email verified)
+    if (!user.active) {
+      return res
+        .status(403)
+        .json({ error: "Please verify your email to activate your account." });
     }
 
+    // Check password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Generate JWT
     const token = generateToken(user);
 
     res.status(200).json({
+      message: "Login successful",
       user_Token: token,
     });
   } catch (error) {
@@ -118,12 +132,11 @@ export const ValidateUser = async (req, res) => {
       .status(500)
       .json({ error: "Something went wrong. Please try again later." });
   }
-}
-
+};
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: "user" }) // Filter by role
+    const users = await User.find({ role: "user" }) 
       .sort({ createdAt: -1 })
       .select("username email password role");
 
@@ -131,7 +144,6 @@ export const getAllUsers = async (req, res) => {
       total: users.length,
       data: users,
     });
-
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -140,7 +152,7 @@ export const getAllUsers = async (req, res) => {
 
 export const getAllAdmins = async (req, res) => {
   try {
-    const users = await User.find({ role: "admin" }) 
+    const users = await User.find({ role: "admin" })
       .sort({ createdAt: -1 })
       .select("username email password role");
 
@@ -148,13 +160,11 @@ export const getAllAdmins = async (req, res) => {
       total: users.length,
       data: users,
     });
-
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 export const deleteUser = async (req, res) => {
   const userId = req.params.id;
@@ -181,7 +191,9 @@ export const googleSignin = async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${token}`
+    );
     if (!response.ok) {
       return res.status(400).json({ error: "Invalid Google token" });
     }
@@ -200,7 +212,7 @@ export const googleSignin = async (req, res) => {
       user = await User.create({
         username: name,
         email,
-        password: googleId, 
+        password: googleId,
         role: "user",
       });
     }
@@ -212,7 +224,6 @@ export const googleSignin = async (req, res) => {
       user,
       token: userToken,
     });
-
   } catch (error) {
     console.error("Google Sign-In error:", error);
     res.status(500).json({ error: "Internal Server Error" });

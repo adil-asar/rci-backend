@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -21,10 +20,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: "user",
     },
+    active: {
+      type: Boolean,
+      default: false, 
+    },
   },
   { timestamps: true }
 );
 
-const User = mongoose.model ('User',userSchema);
+const User = mongoose.model("User", userSchema);
 
-export default User; 
+export default User;
