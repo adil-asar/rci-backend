@@ -6,7 +6,8 @@ import {
     getAllUsers,
     deleteUser,
     getAllAdmins,
-    googleSignin
+    googleSignin,
+    verifyEmail
 } from '../controllers/userController.js'
 import { authenticateUser} from '../middlewares/auth.js';
 
@@ -18,5 +19,6 @@ router.post('/google-signin', googleSignin);
 router.get('/validate', authenticateUser, ValidateUser);
 router.get('/all', getAllUsers);
 router.get('/all-admins', getAllAdmins);
+router.post('/verify-email',authenticateUser, verifyEmail);
 router.delete("/:id", deleteUser);
 export default router;

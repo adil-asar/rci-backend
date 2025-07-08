@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import bcrypt from "bcryptjs";
+import bcrypt, { compareSync } from "bcryptjs";
 import { signUpSchema, signInSchema } from "../validations/user.js";
 import { generateToken, verifyToken } from "../config/token.js";
 import { sendVerificationEmail } from "../config/mailer.js";
@@ -37,7 +37,7 @@ export const Signup = async (req, res) => {
       active: false,
     });
 
-    const token = generateToken({ userId: user._id }, "15m");
+    const token = generateToken(user);
 
     const verificationUrl = `http://localhost:5173/verify-email?token=${token}`;
 
@@ -82,7 +82,7 @@ export const Signin = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid email" });
     }
 
     // Check if user is active (email verified)
@@ -92,10 +92,8 @@ export const Signin = async (req, res) => {
         .json({ error: "Please verify your email to activate your account." });
     }
 
-    // Check password using bcrypt
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid email or password" });
+       if (user.password !== password) {
+      return res.status(401).json({ error: "Invalid password" });
     }
 
     // Generate JWT
@@ -214,6 +212,7 @@ export const googleSignin = async (req, res) => {
         email,
         password: googleId,
         role: "user",
+        active: true, // Automatically activate user on Google sign-in
       });
     }
 
@@ -229,3 +228,40 @@ export const googleSignin = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
+export const verifyEmail = async (req, res) => {
+  const user = req.user.id;
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const verifiedUser = await User.findByIdAndUpdate(
+      user,
+      { active: true },
+      { new: true }
+    );
+
+    if (!verifiedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Email verified successfully",
+      user: {
+        _id: verifiedUser._id,
+        username: verifiedUser.username,
+        email: verifiedUser.email,
+        role: verifiedUser.role,
+        active: verifiedUser.active,
+        createdAt: verifiedUser.createdAt,
+        updatedAt: verifiedUser.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+

@@ -3,14 +3,20 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  secure: true,
-  service: 'gmail',
+  host: "smtp.gmail.com",          
+  port: 465,                        
+  secure: true,                    
   auth: {
-       user: "developer.inventocube@gmail.com",
-       pass: "ityk nrre duin yolo",
+    user: "developer.inventocube@gmail.com",
+    pass: "ityk nrre duin yolo",   
+  },
+  connectionTimeout: 10000,        
+  greetingTimeout: 5000,
+  socketTimeout: 10000,
+  tls: {
+    rejectUnauthorized: false,    
   },
 });
-
 
 
 export const sendVerificationEmail = async ({ email, username , verificationUrl }) => {
@@ -45,3 +51,39 @@ RCI`,
 
   return transporter.sendMail(mailOptions);
 };
+
+
+export const orderConfirmation = async ({ email, username, service, phone, address, city, state, deliveryAddress, deliveryCity, deliveryState }) => {
+  console.log("Sending order confirmation email to:", email);
+
+  const mailOptions = {
+    from: 'RCI <developer.inventocube@gmail.com>',
+    to: email,
+    subject: "Your Order Has Been Confirmed – RCI",
+    text: `Hi ${username},
+
+Thank you for your order and for choosing RCI!
+
+Your order has been successfully confirmed and is now being processed. Below are your order details:
+
+📦 Service: ${service}
+📞 Phone: ${phone}
+
+📍 Billing Address:
+${address}
+${city}, ${state}
+
+🚚 Delivery Address:
+${deliveryAddress}
+${deliveryCity}, ${deliveryState}
+
+If you have any questions or need support, feel free to reach out at any time.
+
+Best regards,  
+Team RCI  
+developer.inventocube@gmail.com`,
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+

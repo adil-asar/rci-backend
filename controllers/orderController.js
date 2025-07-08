@@ -1,4 +1,5 @@
 import Order from "../models/orderModel.js";
+import { orderConfirmation } from "../config/mailer.js";
 
 export const createOrder = async (req, res) => {
   try {
@@ -35,6 +36,27 @@ export const createOrder = async (req, res) => {
 
     const newOrder = new Order(orderData);
     const savedOrder = await newOrder.save();
+
+    // Send confirmation email
+    try {
+     await orderConfirmation({
+  email: savedOrder.email,
+  username: savedOrder.name,
+  service: savedOrder.service,
+  phone: savedOrder.phone,
+  address: savedOrder.address,
+  city: savedOrder.city,
+  state: savedOrder.state,
+  deliveryAddress: savedOrder.deliveryAddress,
+  deliveryCity: savedOrder.deliveryCity,
+  deliveryState: savedOrder.deliveryState,
+});
+
+      console.log("✅ Order confirmation email sent");
+    } catch (emailError) {
+      console.error("❌ Failed to send order confirmation email:", emailError);
+      // optionally continue or return a warning
+    }
 
     res.status(201).json({
       message: "Order created successfully",
