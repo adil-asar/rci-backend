@@ -50,6 +50,7 @@ export const createOrder = async (req, res) => {
   deliveryAddress: savedOrder.deliveryAddress,
   deliveryCity: savedOrder.deliveryCity,
   deliveryState: savedOrder.deliveryState,
+  documents: savedOrder.documents,
 });
 
       console.log("✅ Order confirmation email sent");

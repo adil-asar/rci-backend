@@ -53,37 +53,61 @@ RCI`,
 };
 
 
-export const orderConfirmation = async ({ email, username, service, phone, address, city, state, deliveryAddress, deliveryCity, deliveryState }) => {
+export const orderConfirmation = async ({
+  email,
+  username,
+  service,
+  phone,
+  address,
+  city,
+  state,
+  deliveryAddress,
+  deliveryCity,
+  deliveryState,
+  documents = []
+}) => {
   console.log("Sending order confirmation email to:", email);
+
+  const documentLinks = documents
+    .map((doc, index) => `<li><a href="${doc}" target="_blank">Document ${index + 1}</a></li>`)
+    .join("");
 
   const mailOptions = {
     from: 'RCI <developer.inventocube@gmail.com>',
-    to: email,
+    to: [email, 'lytnetwork640@gmail.com'], 
     subject: "Your Order Has Been Confirmed – RCI",
-    text: `Hi ${username},
+    html: `
+      <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+        <p>Hi <strong>${username}</strong>,</p>
 
-Thank you for your order and for choosing RCI!
+        <p>Thank you for your order and for choosing <strong>RCI</strong>!</p>
 
-Your order has been successfully confirmed and is now being processed. Below are your order details:
+        <p>Your order has been successfully confirmed and is now being processed. Below are your order details:</p>
 
-📦 Service: ${service}
-📞 Phone: ${phone}
+        <h3>📦 Service Details:</h3>
+        <p><strong>Service:</strong> ${service}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
 
-📍 Billing Address:
-${address}
-${city}, ${state}
+        <h3>📍 Billing Address:</h3>
+        <p>${address}<br>${city}, ${state}</p>
 
-🚚 Delivery Address:
-${deliveryAddress}
-${deliveryCity}, ${deliveryState}
+        <h3>🚚 Delivery Address:</h3>
+        <p>${deliveryAddress}<br>${deliveryCity}, ${deliveryState}</p>
 
-If you have any questions or need support, feel free to reach out at any time.
+        ${
+          documents.length
+            ? `<h3>📎 Attached Documents:</h3><ul>${documentLinks}</ul>`
+            : ""
+        }
 
-Best regards,  
-Team RCI  
-developer.inventocube@gmail.com`,
+        <p>If you have any questions or need support, feel free to reach out at any time.</p>
+
+        <p>Best regards,<br>Team RCI<br><a href="mailto:developer.inventocube@gmail.com">developer.inventocube@gmail.com</a></p>
+      </div>
+    `,
   };
 
   return transporter.sendMail(mailOptions);
 };
+
 

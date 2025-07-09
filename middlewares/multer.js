@@ -6,7 +6,7 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => ({
     folder: "rci-backend-documents",
-    allowed_formats: ["jpg", "png", "jpeg", "webp", "pdf", "docx", "xlsx", "pptx", "txt", "zip"],
+    allowed_formats: ["jpg", "png", "jpeg", "webp", "pdf", "docx", "xlsx", "pptx", "txt", "zip", "rar", "jfif"],
     public_id: `${Date.now()}-${file.originalname.split(".")[0]}`,
   }),
 });
