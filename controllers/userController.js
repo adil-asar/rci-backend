@@ -39,7 +39,7 @@ export const Signup = async (req, res) => {
 
     const token = generateToken(user);
 
-    const verificationUrl = `http://localhost:5173/verify-email?token=${token}`;
+    const verificationUrl = `https://dev.replicacopyindustries.com/verify-email?token=${token}`;
 
     await sendVerificationEmail({ email, username, verificationUrl });
 
