@@ -9,9 +9,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })
 );
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://dev.replicacopyindustries.com"], 
-  
+  origin: ["http://localhost:5173", "https://dev.replicacopyindustries.com"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // <== Important if using cookies or auth headers
 };
+
 
 app.use(cors(corsOptions));
 connectDatabase();
