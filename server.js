@@ -8,7 +8,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })
 );
-app.use(cors());
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://dev.replicacopyindustries.com"], 
+  credentials: true, 
+};
+
+app.use(cors(corsOptions));
 connectDatabase();
 app.get("/", (req, res) => {
     res.send("RCI backend is running...");
