@@ -15,8 +15,9 @@ const corsOptions = {
   credentials: true, // <== Important if using cookies or auth headers
 };
 
-
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); 
+
 connectDatabase();
 app.get("/", (req, res) => {
     res.send("RCI backend is running...");
